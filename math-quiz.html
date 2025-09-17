@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fun Maths Quiz</title>
+  <style>
+    :root{--bg:#f7fbff;--card:#fff;--accent:#4f46e5;--good:#16a34a;--bad:#ef4444}
+    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',sans-serif}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#dff4ff 0%,var(--bg) 60%);display:flex;align-items:center;justify-content:center;padding:18px}
+    .app{width:100%;max-width:900px}
+
+    /* Start screen */
+    .start{background:var(--card);padding:28px;border-radius:18px;box-shadow:0 8px 30px rgba(12,20,60,0.08);text-align:center}
+    .logo{font-size:28px;font-weight:700;color:var(--accent);display:flex;gap:12px;align-items:center;justify-content:center}
+    .logo .spark{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ffd166,#ff6b6b);display:inline-flex;align-items:center;justify-content:center;font-size:22px}
+    .start p{margin:10px 0 18px;color:#334155}
+    .play-btn{display:inline-block;padding:12px 22px;border-radius:12px;background:linear-gradient(90deg,#4f46e5,#7c3aed);color:white;font-weight:700;border:none;cursor:pointer;font-size:18px;box-shadow:0 8px 20px rgba(79,70,229,0.25)}
+    .lang-switch{position:absolute;right:20px;top:20px}
+
+    /* Quiz card */
+    .card{background:var(--card);padding:18px;border-radius:14px;box-shadow:0 8px 30px rgba(12,20,60,0.06)}
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .stars{display:flex;gap:6px;align-items:center}
+    .star{font-size:18px}
+    .level{font-weight:700;color:#0f172a}
+    .question{font-size:20px;margin:6px 0 14px;color:#0f172a}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .opt{padding:12px;border-radius:10px;border:2px solid rgba(15,23,42,0.06);cursor:pointer;background:linear-gradient(180deg,#fff,#fbfdff);font-weight:600}
+    .opt.disabled{pointer-events:none;opacity:0.7}
+
+    /* feedback animations */
+    .feedback{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:96px;pointer-events:none}
+    .feedback.show{animation:pop .6s forwards}
+    .feedback.good{color:var(--good)}
+    .feedback.bad{color:var(--bad)}
+    @keyframes pop{0%{transform:translate(-50%,-50%) scale(0)}60%{transform:translate(-50%,-50%) scale(1.12)}100%{transform:translate(-50%,-50%) scale(1)} }
+
+    /* Gameover */
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center}
+    .overlay.show{display:flex}
+    .modal{background:var(--card);padding:20px;border-radius:14px;box-shadow:0 20px 60px rgba(2,6,23,0.25);text-align:center}
+
+    /* misc */
+    .small{font-size:13px;color:#475569}
+    .controls{display:flex;gap:8px;align-items:center}
+
+    @media (max-width:640px){.options{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- language switcher top-right -->
+    <div style="position:relative">
+      <div class="lang-switch">
+        <select id="lang" aria-label="language">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Start screen -->
+    <div id="startScreen" class="start">
+      <div class="logo"><div class="spark">✦</div><div id="appTitle">Fun Maths Quiz</div></div>
+      <p id="appSubtitle">Learn, play & level up — perfect for kids!</p>
+      <div style="display:flex;gap:12px;justify-content:center;align-items:center">
+        <button class="play-btn" id="startBtn">Start Game</button>
+      </div>
+      <p class="small" style="margin-top:12px">Wrong 3 times → Game over. 20 stars to level up.</p>
+    </div>
+
+    <!-- Quiz screen (hidden until start) -->
+    <div id="quizScreen" style="display:none;margin-top:16px">
+      <div class="card">
+        <div class="meta">
+          <div class="level" id="levelName">Level: Junior</div>
+          <div class="stars" id="starBar"></div>
+        </div>
+        <div class="question" id="questionText">Question text</div>
+        <div class="options" id="options"></div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <div class="small">Mistakes: <span id="wrongCount">0</span>/3</div>
+          <div class="controls"><button id="nextBtn" style="display:none">Next</button><button id="quitBtn" class="small">Quit</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- feedback icons -->
+    <div id="feedbackGood" class="feedback good">✅</div>
+    <div id="feedbackBad" class="feedback bad">❎</div>
+
+    <!-- overlay modal -->
+    <div id="overlay" class="overlay">
+      <div class="modal">
+        <h2 id="overlayTitle">Game Over</h2>
+        <p id="overlayMsg">You've used 3 mistakes. Try again!</p>
+        <div style="margin-top:12px"><button id="restartBtn" class="play-btn">Play Again</button></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* --- Configuration --- */
+    const LEVELS = ['Junior','Senior','Master','Grandmaster','Legend'];
+    const LEVELS_TA = ['ஜூனியர்','சீனியர்','மாஸ்டர்','கிராண்ட் மாஸ்டர்','லெஜெண்ட்'];
+    const STARS_PER_LEVEL = 20;
+    const MAX_WRONG = 3;
+
+    // Sample questions. To expand to 500+, load an external JSON file or paste many objects here.
+    // Each question: {id, q: {en,ta}, opts: [{en,ta,value}], answerIndex}
+    const QUESTIONS = [
+      {id:1, q:{en:'5 + 3 = ?', ta:'5 + 3 = ?'}, opts:[{en:'7',ta:'7'},{en:'8',ta:'8'},{en:'9',ta:'9'},{en:'6',ta:'6'}], answerIndex:1},
+      {id:2, q:{en:'10 - 4 = ?', ta:'10 - 4 = ?'}, opts:[{en:'6',ta:'6'},{en:'5',ta:'5'},{en:'7',ta:'7'},{en:'4',ta:'4'}], answerIndex:0},
+      {id:3, q:{en:'3 × 4 = ?', ta:'3 × 4 = ?'}, opts:[{en:'12',ta:'12'},{en:'7',ta:'7'},{en:'9',ta:'9'},{en:'11',ta:'11'}], answerIndex:0},
+      {id:4, q:{en:'12 ÷ 3 = ?', ta:'12 ÷ 3 = ?'}, opts:[{en:'3',ta:'3'},{en:'4',ta:'4'},{en:'6',ta:'6'},{en:'5',ta:'5'}], answerIndex:1},
+      {id:5, q:{en:'What is 7 + 6?', ta:'7 + 6 = ?'}, opts:[{en:'13',ta:'13'},{en:'12',ta:'12'},{en:'14',ta:'14'},{en:'11',ta:'11'}], answerIndex:0},
+      {id:6, q:{en:'9 - 5 = ?', ta:'9 - 5 = ?'}, opts:[{en:'4',ta:'4'},{en:'5',ta:'5'},{en:'3',ta:'3'},{en:'2',ta:'2'}], answerIndex:0},
+      {id:7, q:{en:'6 × 6 = ?', ta:'6 × 6 = ?'}, opts:[{en:'36',ta:'36'},{en:'30',ta:'30'},{en:'42',ta:'42'},{en:'32',ta:'32'}], answerIndex:0},
+      {id:8, q:{en:'15 ÷ 5 = ?', ta:'15 ÷ 5 = ?'}, opts:[{en:'3',ta:'3'},{en:'5',ta:'5'},{en:'2',ta:'2'},{en:'4',ta:'4'}], answerIndex:0},
+      {id:9, q:{en:'2 + 2 × 3 = ?', ta:'2 + 2 × 3 = ?'}, opts:[{en:'8',ta:'8'},{en:'12',ta:'12'},{en:'10',ta:'10'},{en:'6',ta:'6'}], answerIndex:0},
+      {id:10, q:{en:'What is half of 14?', ta:'14ன் பாதி எவ்வாறு?'}, opts:[{en:'7',ta:'7'},{en:'8',ta:'8'},{en:'6',ta:'6'},{en:'9',ta:'9'}], answerIndex:0},
+      {id:11, q:{en:'Square of 5?', ta:'5ன் விகிதம்?'}, opts:[{en:'25',ta:'25'},{en:'10',ta:'10'},{en:'15',ta:'15'},{en:'20',ta:'20'}], answerIndex:0},
+      {id:12, q:{en:'What is 4 × 2 + 1?', ta:'4 × 2 + 1 = ?'}, opts:[{en:'9',ta:'9'},{en:'8',ta:'8'},{en:'7',ta:'7'},{en:'6',ta:'6'}], answerIndex:0}
+    ];
+
+    /* --- State --- */
+    let lang = localStorage.getItem('quiz_lang') || 'en';
+    let currentLevel = parseInt(localStorage.getItem('quiz_level')||0,10);
+    let starsInLevel = parseInt(localStorage.getItem('quiz_stars')||0,10);
+    let wrongCount = 0;
+    let questionIndex = 0;
+    let shuffled = [];
+
+    /* --- DOM --- */
+    const langSelect = document.getElementById('lang');
+    const startBtn = document.getElementById('startBtn');
+    const startScreen = document.getElementById('startScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const questionText = document.getElementById('questionText');
+    const optionsEl = document.getElementById('options');
+    const levelName = document.getElementById('levelName');
+    const starBar = document.getElementById('starBar');
+    const wrongCountEl = document.getElementById('wrongCount');
+    const feedbackGood = document.getElementById('feedbackGood');
+    const feedbackBad = document.getElementById('feedbackBad');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayMsg = document.getElementById('overlayMsg');
+    const restartBtn = document.getElementById('restartBtn');
+    const quitBtn = document.getElementById('quitBtn');
+
+    // init
+    function initUI(){
+      langSelect.value = lang;
+      updateLangTexts();
+      renderStars();
+      levelName.textContent = getLevelName();
+      wrongCountEl.textContent = wrongCount;
+    }
+
+    function getLevelName(){return lang==='ta'?LEVELS_TA[currentLevel] || LEVELS_TA[LEVELS_TA.length-1]:LEVELS[currentLevel] || LEVELS[LEVELS.length-1];}
+
+    function updateLangTexts(){
+      document.getElementById('appTitle').textContent = lang==='ta' ? 'குறைந்த கணிதம்' : 'Fun Maths Quiz';
+      document.getElementById('appSubtitle').textContent = lang==='ta' ? 'கற்றுக்கொள், விளையாடு, முன்னேறு!' : 'Learn, play & level up — perfect for kids!';
+      startBtn.textContent = lang==='ta' ? 'போடுங்கள்' : 'Start Game';
+      overlayTitle.textContent = lang==='ta' ? 'விளையாட்டு முடிந்தது' : 'Game Over';
+      overlayMsg.textContent = lang==='ta' ? 'நீங்கள் 3 தவறுகளை பயன்படுத்தியுள்ளீர்கள். மீண்டும் முயற்சிக்கவும்!' : "You've used 3 mistakes. Try again!";
+      document.getElementById('levelName').textContent = (lang==='ta' ? 'நிலை: ' : 'Level: ') + getLevelName();
+    }
+
+    // shuffle questions
+    function shuffleQuestions(){
+      shuffled = QUESTIONS.slice();
+      for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]}
+      questionIndex = 0;
+    }
+
+    function renderQuestion(){
+      const q = shuffled[questionIndex % shuffled.length];
+      questionText.textContent = q.q[lang] || q.q.en;
+      optionsEl.innerHTML = '';
+      q.opts.forEach((o, idx)=>{
+        const btn = document.createElement('button');
+        btn.className='opt';
+        btn.innerText = o[lang] || o.en;
+        btn.onclick = ()=>selectOption(idx,btn,q.answerIndex);
+        optionsEl.appendChild(btn);
+      })
+    }
+
+    function selectOption(idx,btn,answerIndex){
+      // disable options
+      document.querySelectorAll('.opt').forEach(x=>x.classList.add('disabled'));
+      if(idx===answerIndex){
+        showFeedback(true);
+        starsInLevel += 1;
+        saveProgress();
+        renderStars();
+        // check level up
+        if(starsInLevel>=STARS_PER_LEVEL){
+          starsInLevel = starsInLevel - STARS_PER_LEVEL;
+          currentLevel = Math.min(currentLevel+1, LEVELS.length-1);
+          levelName.textContent = (lang==='ta' ? 'நிலை: ' : 'Level: ') + getLevelName();
+          saveProgress();
+          setTimeout(()=>alert((lang==='ta'? 'நீங்கள் அடுத்த நிலைக்கு மேலே சென்றீர்கள்!':'You leveled up!')) ,200);
+        }
+      } else {
+        showFeedback(false);
+        wrongCount +=1;
+        wrongCountEl.textContent = wrongCount;
+        if(wrongCount>=MAX_WRONG){
+          // game over
+          setTimeout(()=>showGameOver(),600);
+          return;
+        }
+      }
+      // move next after short delay
+      setTimeout(()=>{questionIndex++;renderQuestion();document.querySelectorAll('.opt').forEach(x=>x.classList.remove('disabled'))},700);
+    }
+
+    function showFeedback(good){
+      const el = good? feedbackGood : feedbackBad;
+      el.classList.remove('show');
+      void el.offsetWidth; // reflow
+      el.classList.add('show');
+      setTimeout(()=>el.classList.remove('show'),700);
+    }
+
+    function renderStars(){
+      starBar.innerHTML='';
+      for(let i=0;i<STARS_PER_LEVEL;i++){
+        const span = document.createElement('div');
+        span.className='star';
+        span.textContent = i < starsInLevel ? '⭐' : '☆';
+        starBar.appendChild(span);
+      }
+    }
+
+    function saveProgress(){
+      localStorage.setItem('quiz_lang',lang);
+      localStorage.setItem('quiz_level',String(currentLevel));
+      localStorage.setItem('quiz_stars',String(starsInLevel));
+    }
+
+    function showGameOver(){
+      overlay.classList.add('show');
+    }
+
+    function resetGame(){
+      wrongCount = 0;
+      wrongCountEl.textContent = wrongCount;
+      starsInLevel = 0;
+      currentLevel = 0;
+      saveProgress();
+      renderStars();
+      overlay.classList.remove('show');
+      startScreen.style.display='block';
+      quizScreen.style.display='none';
+    }
+
+    // start
+    startBtn.addEventListener('click',()=>{
+      startScreen.style.display='none';
+      quizScreen.style.display='block';
+      wrongCount = 0; wrongCountEl.textContent = wrongCount;
+      shuffleQuestions();
+      renderQuestion();
+    });
+
+    restartBtn.addEventListener('click',()=>{
+      overlay.classList.remove('show');
+      startScreen.style.display='block';
+      quizScreen.style.display='none';
+    });
+
+    quitBtn.addEventListener('click',()=>{
+      if(confirm(lang==='ta' ? 'வெளியேற விரும்புகிறீர்களா?' : 'Quit game?')){
+        startScreen.style.display='block';
+        quizScreen.style.display='none';
+        saveProgress();
+      }
+    });
+
+    langSelect.addEventListener('change',(e)=>{
+      lang = e.target.value;
+      saveProgress();
+      updateLangTexts();
+      renderQuestion();
+      renderStars();
+    });
+
+    // allow loading external questions: place a file questions.json next to this html and call loadExternalQuestions()
+    async function loadExternalQuestions(){
+      try{
+        const res = await fetch('questions.json');
+        if(!res.ok) return;
+        const data = await res.json();
+        if(Array.isArray(data) && data.length>0){
+          // expected same schema as QUESTIONS
+          QUESTIONS.length = 0; data.forEach(q=>QUESTIONS.push(q));
+          shuffleQuestions();
+        }
+      }catch(e){console.warn('no external questions',e)}
+    }
+
+    // initialize UI
+    initUI();
+    // uncomment to auto-load questions.json if present
+    // loadExternalQuestions();
+
+  </script>
+</body>
+</html>
+
