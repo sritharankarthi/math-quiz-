@@ -6,9 +6,9 @@
 <title>Ultimate Science Quiz 100+</title>
 <style>
 body { font-family: Arial; background:#e0f7fa; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}
-.container { background:#fff; padding:20px 25px; border-radius:15px; width:95%; max-width:600px; box-shadow:0 0 15px rgba(0,0,0,0.2);}
+.container { background:#fff; padding:20px 25px; border-radius:15px; width:95%; max-width:650px; box-shadow:0 0 15px rgba(0,0,0,0.2);}
 h1,h2 { text-align:center; color:#00796b; }
-.start-screen, .quiz-screen, .level-up, .game-over { text-align:center; display:none; }
+.start-screen, .quiz-screen, .level-up, .game-over, .leaderboard { text-align:center; display:none; }
 .start-screen { display:block; }
 button { padding:10px 20px; font-size:16px; border:none; border-radius:10px; cursor:pointer; margin:5px; transition:0.3s;}
 .options button { display:block; width:100%; margin:10px 0; background:#80deea; color:#000;}
@@ -23,25 +23,26 @@ button { padding:10px 20px; font-size:16px; border:none; border-radius:10px; cur
 .star { width:25px; height:25px; background:gray; margin:2px; clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
 .star.active { background:gold; animation: glow 0.6s;}
 @keyframes glow { 0%{transform:scale(1);} 50%{transform:scale(1.5);} 100%{transform:scale(1);} }
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
-}
+#timer { font-size:20px; font-weight:bold; color:red; margin:10px;}
+.leaderboard table { width:100%; border-collapse:collapse; margin-top:10px;}
+.leaderboard th, .leaderboard td { border:1px solid #ccc; padding:8px;}
 </style>
 </head>
 <body>
 <div class="container">
 
+<!-- Start Screen -->
 <div class="start-screen" id="startScreen">
   <h1>Ultimate Science Quiz 100+</h1>
+  <input type="text" id="playerName" placeholder="Enter your name" style="padding:8px; border-radius:8px; border:1px solid #aaa;"><br><br>
   <button id="startBtn">Start Quiz</button>
+  <button id="showLeaderboardBtn">Leaderboard</button>
 </div>
 
+<!-- Quiz Screen -->
 <div class="quiz-screen" id="quizScreen">
   <h2 id="levelTitle">Level: Junior</h2>
+  <div id="timer">⏳ 15</div>
   <div class="progress" id="progressStars"></div>
   <div id="question" class="question">Question Text</div>
   <div class="options">
@@ -52,16 +53,29 @@ button { padding:10px 20px; font-size:16px; border:none; border-radius:10px; cur
   </div>
 </div>
 
+<!-- Level Up -->
 <div class="level-up" id="levelUpScreen">
   <h1>🎉 Level Up! 🎉</h1>
   <p id="nextLevelName">Next Level: Senior</p>
   <button id="continueBtn">Continue</button>
 </div>
 
+<!-- Game Over -->
 <div class="game-over" id="gameOverScreen">
-  <h1 style="color:red; animation: shake 1s infinite;">❌ Game Over ❌</h1>
-  <p>You gave 3 wrong answers.</p>
+  <h1 style="color:red;">❌ Game Over ❌</h1>
+  <p id="finalScore"></p>
   <button onclick="restartGame()">Restart</button>
+  <button onclick="showLeaderboard()">Leaderboard</button>
+</div>
+
+<!-- Leaderboard -->
+<div class="leaderboard" id="leaderboardScreen">
+  <h1>🏆 Leaderboard 🏆</h1>
+  <table>
+    <thead><tr><th>Name</th><th>Level</th><th>Score</th></tr></thead>
+    <tbody id="leaderboardTable"></tbody>
+  </table>
+  <button onclick="backToStart()">Back</button>
 </div>
 
 <audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -70,147 +84,165 @@ button { padding:10px 20px; font-size:16px; border:none; border-radius:10px; cur
 
 </div>
 
-<!-- Confetti library -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-
 <script>
 const levels = ["Junior","Senior","Master","Grandmaster","Legend"];
-let currentLevel = 0;
-let currentQuestion = 0;
-let stars = 0;
-let wrongCount = 0;
+let currentLevel = 0, currentQuestion = 0, stars = 0, wrongCount = 0, timer, timeLeft = 15, playerName="";
+let score = 0;
 
-const startScreen = document.getElementById("startScreen");
-const startBtn = document.getElementById("startBtn");
-const quizScreen = document.getElementById("quizScreen");
-const levelTitle = document.getElementById("levelTitle");
-const progressStars = document.getElementById("progressStars");
-const questionEl = document.getElementById("question");
-const optionBtns = [
-  document.getElementById("option0"),
-  document.getElementById("option1"),
-  document.getElementById("option2"),
-  document.getElementById("option3")
-];
-const levelUpScreen = document.getElementById("levelUpScreen");
-const nextLevelName = document.getElementById("nextLevelName");
-const continueBtn = document.getElementById("continueBtn");
-const gameOverScreen = document.getElementById("gameOverScreen");
+const startScreen=document.getElementById("startScreen");
+const quizScreen=document.getElementById("quizScreen");
+const levelTitle=document.getElementById("levelTitle");
+const progressStars=document.getElementById("progressStars");
+const questionEl=document.getElementById("question");
+const optionBtns=[document.getElementById("option0"),document.getElementById("option1"),document.getElementById("option2"),document.getElementById("option3")];
+const levelUpScreen=document.getElementById("levelUpScreen");
+const nextLevelName=document.getElementById("nextLevelName");
+const continueBtn=document.getElementById("continueBtn");
+const gameOverScreen=document.getElementById("gameOverScreen");
+const finalScore=document.getElementById("finalScore");
+const leaderboardScreen=document.getElementById("leaderboardScreen");
+const leaderboardTable=document.getElementById("leaderboardTable");
+const timerEl=document.getElementById("timer");
+const correctSound=document.getElementById("correctSound");
+const wrongSound=document.getElementById("wrongSound");
+const levelUpSound=document.getElementById("levelUpSound");
 
-const correctSound = document.getElementById("correctSound");
-const wrongSound = document.getElementById("wrongSound");
-const levelUpSound = document.getElementById("levelUpSound");
-
-// 100+ questions (10 × 10 = 100)
-const quizData = [
-  // Junior level questions (example 10)
-  {question:"Light travels fastest in?", options:["Vacuum","Water","Air","Glass"], answer:0},
-  {question:"H2O is chemical formula for?", options:["Water","Oxygen","Hydrogen","Helium"], answer:0},
-  {question:"Force = Mass x ?", options:["Acceleration","Velocity","Speed","Energy"], answer:0},
-  {question:"Photosynthesis occurs in?", options:["Leaves","Roots","Stem","Flowers"], answer:0},
-  {question:"Boiling point of water?", options:["100°C","0°C","50°C","90°C"], answer:0},
-  {question:"Newton's first law is?", options:["Law of inertia","F=ma","Action-Reaction","Gravity"], answer:0},
-  {question:"Unit of electric current?", options:["Ampere","Volt","Watt","Ohm"], answer:0},
-  {question:"pH of pure water?", options:["7","0","14","1"], answer:0},
-  {question:"Energy stored in a spring?", options:["Potential","Kinetic","Thermal","Magnetic"], answer:0},
-  {question:"Unit of frequency?", options:["Hertz","Newton","Watt","Joule"], answer:0},
-
-  // 👉 Add more levels same as before (Senior, Master, etc.)
-  // I truncated here to save space, but you can use your full 100+ quizData from before
+// Sample Questions (add more for 100+)
+const quizData=[
+  {question:"Light travels fastest in?",options:["Vacuum","Water","Air","Glass"],answer:0},
+  {question:"H2O is chemical formula for?",options:["Water","Oxygen","Hydrogen","Helium"],answer:0},
+  {question:"Force = Mass x ?",options:["Acceleration","Velocity","Speed","Energy"],answer:0}
+  // 👉 add remaining 100+ questions here
 ];
 
-startBtn.addEventListener("click", ()=>{
+// Start
+document.getElementById("startBtn").addEventListener("click",()=>{
+  playerName=document.getElementById("playerName").value||"Unknown";
   startScreen.style.display="none";
   quizScreen.style.display="block";
   showQuestion();
 });
 
+// Timer
+function startTimer(){
+  clearInterval(timer);
+  timeLeft=15;
+  timerEl.innerText="⏳ "+timeLeft;
+  timer=setInterval(()=>{
+    timeLeft--;
+    timerEl.innerText="⏳ "+timeLeft;
+    if(timeLeft<=0){
+      clearInterval(timer);
+      wrongCount++;
+      if(wrongCount>=3){ gameOver(); return; }
+      nextQuestion();
+    }
+  },1000);
+}
+
+// Stars
 function updateStars(){
-  progressStars.innerHTML = '';
+  progressStars.innerHTML='';
   for(let i=0;i<10;i++){
-    const star = document.createElement('div');
+    const star=document.createElement('div');
     star.classList.add('star');
     if(i<stars) star.classList.add('active');
     progressStars.appendChild(star);
   }
 }
 
+// Show Q
 function showQuestion(){
-  const q = quizData[currentQuestion];
-  questionEl.innerText = q.question;
+  if(currentQuestion>=quizData.length){ gameOver(); return; }
+  const q=quizData[currentQuestion];
+  questionEl.innerText=q.question;
   q.options.forEach((opt,i)=>{
-    optionBtns[i].innerText = opt;
+    optionBtns[i].innerText=opt;
     optionBtns[i].classList.remove("correct","wrong");
-    optionBtns[i].disabled = false;
-    optionBtns[i].onclick = ()=>{
-      if(i===q.answer){ 
-        optionBtns[i].classList.add("correct"); 
-        correctSound.play();
-        stars++; 
-      } else { 
-        optionBtns[i].classList.add("wrong"); 
-        wrongSound.play();
-        wrongCount++;
-        if(wrongCount >= 3){
-          gameOver();
-          return;
-        }
-      }
-      optionBtns.forEach(b=>b.disabled=true);
-      updateStars();
-      setTimeout(()=>{
-        currentQuestion++;
-        if(stars>=10){ showLevelUp(); return; }
-        if(currentQuestion>=quizData.length){ 
-          alert("Quiz Completed!"); 
-          location.reload(); 
-          return; 
-        }
-        showQuestion();
-      },800);
-    };
+    optionBtns[i].disabled=false;
+    optionBtns[i].onclick=()=>chooseAnswer(i,q.answer);
   });
-  levelTitle.innerText = "Level: "+levels[currentLevel];
+  levelTitle.innerText="Level: "+levels[currentLevel];
   updateStars();
+  startTimer();
 }
+
+// Choose Answer
+function chooseAnswer(i,correct){
+  clearInterval(timer);
+  if(i===correct){ 
+    optionBtns[i].classList.add("correct"); 
+    correctSound.play(); 
+    stars++; score+=10; 
+  } else { 
+    optionBtns[i].classList.add("wrong"); 
+    wrongSound.play(); 
+    wrongCount++; 
+  }
+  optionBtns.forEach(b=>b.disabled=true);
+  setTimeout(()=>{ 
+    if(wrongCount>=3){ gameOver(); return; }
+    if(stars>=10){ showLevelUp(); return; }
+    nextQuestion(); 
+  },800);
+}
+
+function nextQuestion(){ currentQuestion++; showQuestion(); }
 
 function showLevelUp(){
   quizScreen.style.display='none';
   levelUpScreen.style.display='block';
-  nextLevelName.innerText = "Next Level: "+(levels[currentLevel+1]||"Legend");
+  nextLevelName.innerText="Next Level: "+(levels[currentLevel+1]||"Legend");
   levelUpSound.play();
 }
 
 continueBtn.addEventListener('click',()=>{
   levelUpScreen.style.display='none';
   quizScreen.style.display='block';
-  stars=0;
-  currentLevel++;
+  stars=0; currentLevel++; 
   showQuestion();
 });
 
+// Game Over
 function gameOver(){
+  clearInterval(timer);
   quizScreen.style.display="none";
   levelUpScreen.style.display="none";
   gameOverScreen.style.display="block";
+  finalScore.innerText=`${playerName}, Your Score: ${score}`;
+  saveScore(playerName,levels[currentLevel],score);
 }
 
+// Restart
 function restartGame(){
-  wrongCount = 0;
-  stars = 0;
-  currentLevel = 0;
-  currentQuestion = 0;
-
-  gameOverScreen.style.display="none";
-  quizScreen.style.display="block";
+  wrongCount=0; stars=0; currentLevel=0; currentQuestion=0; score=0;
+  gameOverScreen.style.display="none"; quizScreen.style.display="block";
   showQuestion();
+}
 
-  // Confetti 🎉
-  confetti({
-    particleCount: 150,
-    spread: 80,
-    origin: { y: 0.6 }
+// Leaderboard
+function saveScore(name,level,score){
+  let board=JSON.parse(localStorage.getItem("leaderboard")||"[]");
+  board.push({name,level,score});
+  board.sort((a,b)=>b.score-a.score);
+  if(board.length>10) board=board.slice(0,10);
+  localStorage.setItem("leaderboard",JSON.stringify(board));
+}
+
+document.getElementById("showLeaderboardBtn").addEventListener("click",showLeaderboard);
+function showLeaderboard(){
+  startScreen.style.display="none"; gameOverScreen.style.display="none"; leaderboardScreen.style.display="block";
+  let board=JSON.parse(localStorage.getItem("leaderboard")||"[]");
+  leaderboardTable.innerHTML="";
+  board.forEach(r=>{
+    let tr=document.createElement("tr");
+    tr.innerHTML=`<td>${r.name}</td><td>${r.level}</td><td>${r.score}</td>`;
+    leaderboardTable.appendChild(tr);
   });
+}
+
+function backToStart(){
+  leaderboardScreen.style.display="none"; startScreen.style.display="block";
 }
 </script>
 </body>
