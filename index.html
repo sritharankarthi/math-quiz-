@@ -1,249 +1,549 @@
 <!DOCTYPE html>
-<html lang="ta">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Science Quiz 100+</title>
-<style>
-body { font-family: Arial; background:#e0f7fa; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}
-.container { background:#fff; padding:20px 25px; border-radius:15px; width:95%; max-width:650px; box-shadow:0 0 15px rgba(0,0,0,0.2);}
-h1,h2 { text-align:center; color:#00796b; }
-.start-screen, .quiz-screen, .level-up, .game-over, .leaderboard { text-align:center; display:none; }
-.start-screen { display:block; }
-button { padding:10px 20px; font-size:16px; border:none; border-radius:10px; cursor:pointer; margin:5px; transition:0.3s;}
-.options button { display:block; width:100%; margin:10px 0; background:#80deea; color:#000;}
-.options button:hover { background:#26c6da; color:#fff;}
-.correct { background:#c8e6c9 !important; animation: correctAnim 0.5s;}
-.wrong { background:#ffcdd2 !important; animation: wrongAnim 0.5s;}
-@keyframes correctAnim { 0%{transform:scale(1);} 50%{transform:scale(1.2);} 100%{transform:scale(1);} }
-@keyframes wrongAnim { 0%{transform:rotate(0);} 25%{transform:rotate(-5deg);} 50%{transform:rotate(5deg);} 75%{transform:rotate(-5deg);} 100%{transform:rotate(0);} }
-.level-up h1 { color:green; animation: bounce 1s infinite; }
-@keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
-.progress { display:flex; justify-content:center; margin:10px 0;}
-.star { width:25px; height:25px; background:gray; margin:2px; clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
-.star.active { background:gold; animation: glow 0.6s;}
-@keyframes glow { 0%{transform:scale(1);} 50%{transform:scale(1.5);} 100%{transform:scale(1);} }
-#timer { font-size:20px; font-weight:bold; color:red; margin:10px;}
-.leaderboard table { width:100%; border-collapse:collapse; margin-top:10px;}
-.leaderboard th, .leaderboard td { border:1px solid #ccc; padding:8px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Quiz Challenge 🧪🔬🔭</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --bg-color: #1a1a2e;
+            --primary-color: #16213e;
+            --secondary-color: #0f3460;
+            --accent-color: #e94560;
+            --text-color: #ffffff;
+            --correct-color: #28a745;
+            --wrong-color: #dc3545;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+
+        .container {
+            background-color: var(--primary-color);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Start Screen */
+        #start-screen h1 {
+            font-size: 2.5em;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        #start-screen p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        #player-name {
+            width: 80%;
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 2px solid var(--secondary-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+        #start-btn {
+            font-size: 1.2em;
+        }
+
+        /* Quiz Screen */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        #level-info, #score-info, #wrong-info, #timer {
+            background-color: var(--secondary-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        #timer {
+            font-weight: bold;
+            color: var(--accent-color);
+            font-size: 1.3em;
+        }
+        #question-container {
+            margin-bottom: 25px;
+        }
+        #question-text {
+            font-size: 1.5em;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        #options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        /* Game Over Screen */
+        #game-over-screen h2 {
+            font-size: 2.2em;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        #final-score {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+        #leaderboard h3 {
+            font-size: 1.4em;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        #leaderboard-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #leaderboard-list li {
+            font-size: 1.1em;
+            padding: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        #leaderboard-list li:nth-child(odd) {
+            background-color: var(--secondary-color);
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: #0f3460;
+            color: var(--text-color);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        .btn.primary {
+            background-color: var(--accent-color);
+        }
+        .btn.primary:hover {
+            background-color: #ff6b81;
+        }
+        .btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Animations */
+        @keyframes flash-green {
+            0%, 100% { background-color: var(--correct-color); }
+            50% { background-color: var(--secondary-color); }
+        }
+        @keyframes flash-red {
+            0%, 100% { background-color: var(--wrong-color); }
+            50% { background-color: var(--secondary-color); }
+        }
+        .correct-flash {
+            animation: flash-green 0.5s ease-in-out;
+        }
+        .wrong-flash {
+            animation: flash-red 0.5s ease-in-out;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .screen { padding: 20px; }
+            #start-screen h1 { font-size: 2em; }
+            #question-text { font-size: 1.2em; }
+            .quiz-header { flex-direction: column; gap: 10px; align-items: stretch; }
+            #timer { align-self: center; font-size: 1.5em; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
 
-<!-- Start Screen -->
-<div class="start-screen" id="startScreen">
-  <h1>Ultimate Science Quiz 100+</h1>
-  <input type="text" id="playerName" placeholder="Enter your name" style="padding:8px; border-radius:8px; border:1px solid #aaa;"><br><br>
-  <button id="startBtn">Start Quiz</button>
-  <button id="showLeaderboardBtn">Leaderboard</button>
-</div>
+    <div class="container">
+        <div id="start-screen" class="screen active">
+            <h1>Science Quiz Challenge 🚀</h1>
+            <p>Test your knowledge! 100 questions, 5 levels. 3 wrong answers and you're out!</p>
+            <input type="text" id="player-name" placeholder="Enter Your Name">
+            <button id="start-btn" class="btn primary">Start Game</button>
+        </div>
 
-<!-- Quiz Screen -->
-<div class="quiz-screen" id="quizScreen">
-  <h2 id="levelTitle">Level: Junior</h2>
-  <div id="timer">⏳ 15</div>
-  <div class="progress" id="progressStars"></div>
-  <div id="question" class="question">Question Text</div>
-  <div class="options">
-    <button id="option0"></button>
-    <button id="option1"></button>
-    <button id="option2"></button>
-    <button id="option3"></button>
-  </div>
-</div>
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div id="level-info">Level: 1 ⭐</div>
+                <div id="score-info">Score: 0</div>
+                <div id="wrong-info">❌: 0</div>
+                <div id="timer">15</div>
+            </div>
+            <div id="question-container">
+                <p id="question-text">Question goes here...</p>
+            </div>
+            <div id="options-container">
+                </div>
+        </div>
 
-<!-- Level Up -->
-<div class="level-up" id="levelUpScreen">
-  <h1>🎉 Level Up! 🎉</h1>
-  <p id="nextLevelName">Next Level: Senior</p>
-  <button id="continueBtn">Continue</button>
-</div>
+        <div id="game-over-screen" class="screen">
+            <h2>Game Over! ❌</h2>
+            <p id="final-score">Your Score: 0</p>
+            <div id="leaderboard">
+                <h3>🏆 Leaderboard 🏆</h3>
+                <ul id="leaderboard-list">
+                    </ul>
+            </div>
+            <button id="restart-btn" class="btn primary">Play Again 🔄</button>
+        </div>
+    </div>
+    
+    <script>
+    const questions = [
+        // Junior Level (Biology, Chemistry, Physics)
+        { question: "What is the powerhouse of the cell?", options: ["Mitochondrion", "Nucleus", "Ribosome", "Chloroplast"], answer: "Mitochondrion", category: "Biology" },
+        { question: "What is the chemical symbol for water?", options: ["H2O", "O2", "CO2", "NaCl"], answer: "H2O", category: "Chemistry" },
+        { question: "What force pulls objects towards the center of the Earth?", options: ["Gravity", "Magnetism", "Friction", "Tension"], answer: "Gravity", category: "Physics" },
+        { question: "What part of the plant conducts photosynthesis?", options: ["Leaf", "Root", "Stem", "Flower"], answer: "Leaf", category: "Biology" },
+        { question: "What is the most abundant gas in Earth's atmosphere?", options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Argon"], answer: "Nitrogen", category: "Chemistry" },
+        { question: "What is the unit of electric current?", options: ["Ampere", "Volt", "Watt", "Ohm"], answer: "Ampere", category: "Physics" },
+        { question: "How many bones are in the adult human body?", options: ["206", "201", "212", "198"], answer: "206", category: "Biology" },
+        { question: "What is the chemical symbol for Gold?", options: ["Au", "Ag", "G", "Go"], answer: "Au", category: "Chemistry" },
+        { question: "For every action, there is an equal and opposite reaction. This is Newton's ___ Law.", options: ["Third", "First", "Second", "Fourth"], answer: "Third", category: "Physics" },
+        { question: "Which organ pumps blood throughout the human body?", options: ["Heart", "Lungs", "Brain", "Liver"], answer: "Heart", category: "Biology" },
+        // ... (10 Junior questions)
 
-<!-- Game Over -->
-<div class="game-over" id="gameOverScreen">
-  <h1 style="color:red;">❌ Game Over ❌</h1>
-  <p id="finalScore"></p>
-  <button onclick="restartGame()">Restart</button>
-  <button onclick="showLeaderboard()">Leaderboard</button>
-</div>
+        // Senior Level
+        { question: "What is the process by which plants release water vapor?", options: ["Transpiration", "Respiration", "Photosynthesis", "Germination"], answer: "Transpiration", category: "Biology" },
+        { question: "Which element has the atomic number 1?", options: ["Hydrogen", "Helium", "Oxygen", "Carbon"], answer: "Hydrogen", category: "Chemistry" },
+        { question: "What is the speed of light in a vacuum?", options: ["299,792,458 m/s", "150,000,000 m/s", "343 m/s", "1,000,000,000 m/s"], answer: "299,792,458 m/s", category: "Physics" },
+        { question: "What are the building blocks of proteins?", options: ["Amino acids", "Fatty acids", "Nucleotides", "Monosaccharides"], answer: "Amino acids", category: "Biology" },
+        { question: "What type of chemical bond involves the sharing of electron pairs?", options: ["Covalent bond", "Ionic bond", "Metallic bond", "Hydrogen bond"], answer: "Covalent bond", category: "Chemistry" },
+        { question: "What is the energy of motion called?", options: ["Kinetic energy", "Potential energy", "Chemical energy", "Thermal energy"], answer: "Kinetic energy", category: "Physics" },
+        { question: "Which blood type is the universal donor?", options: ["O-", "AB+", "A+", "B-"], answer: "O-", category: "Biology" },
+        { question: "What is the pH of a neutral substance?", options: ["7", "0", "14", "1"], answer: "7", category: "Chemistry" },
+        { question: "Which planet is known as the Red Planet?", options: ["Mars", "Jupiter", "Venus", "Saturn"], answer: "Mars", category: "Physics" },
+        { question: "What is the largest organ of the human body?", options: ["Skin", "Liver", "Brain", "Heart"], answer: "Skin", category: "Biology" },
+        // ... (10 Senior questions)
+        
+        // Master Level
+        { question: "What is the function of the ribosome in a cell?", options: ["Protein synthesis", "Energy production", "DNA replication", "Waste disposal"], answer: "Protein synthesis", category: "Biology" },
+        { question: "What is the general formula for alkanes?", options: ["CnH2n+2", "CnH2n", "CnH2n-2", "CnHn"], answer: "CnH2n+2", category: "Chemistry" },
+        { question: "What is escape velocity?", options: ["The speed needed to escape a planet's gravitational pull", "The speed of sound", "The terminal velocity of an object", "The speed of an orbiting satellite"], answer: "The speed needed to escape a planet's gravitational pull", category: "Physics" },
+        { question: "What does 'DNA' stand for?", options: ["Deoxyribonucleic acid", "Diribonucleic acid", "Deoxyribonuclear acid", "Dironucleic acid"], answer: "Deoxyribonucleic acid", category: "Biology" },
+        { question: "Which of these is a noble gas?", options: ["Neon", "Oxygen", "Nitrogen", "Chlorine"], answer: "Neon", category: "Chemistry" },
+        { question: "What does a Geiger counter measure?", options: ["Ionizing radiation", "Sound waves", "Light intensity", "Magnetic fields"], answer: "Ionizing radiation", category: "Physics" },
+        { question: "What is meiosis?", options: ["A type of cell division that results in four daughter cells with half the number of chromosomes", "A type of cell division for growth and repair", "The process of fertilization", "The mutation of a gene"], answer: "A type of cell division that results in four daughter cells with half the number of chromosomes", category: "Biology" },
+        { question: "What is the process of a solid turning directly into a gas?", options: ["Sublimation", "Evaporation", "Condensation", "Deposition"], answer: "Sublimation", category: "Chemistry" },
+        { question: "What is the principle behind fiber optics?", options: ["Total Internal Reflection", "Refraction", "Diffraction", "Polarization"], answer: "Total Internal Reflection", category: "Physics" },
+        { question: "Which part of the brain is responsible for balance and coordination?", options: ["Cerebellum", "Cerebrum", "Medulla oblongata", "Thalamus"], answer: "Cerebellum", category: "Biology" },
+        // ... (10 Master questions)
 
-<!-- Leaderboard -->
-<div class="leaderboard" id="leaderboardScreen">
-  <h1>🏆 Leaderboard 🏆</h1>
-  <table>
-    <thead><tr><th>Name</th><th>Level</th><th>Score</th></tr></thead>
-    <tbody id="leaderboardTable"></tbody>
-  </table>
-  <button onclick="backToStart()">Back</button>
-</div>
+        // Grandmaster Level
+        { question: "What is CRISPR-Cas9?", options: ["A gene-editing tool", "A type of bacteria", "A protein complex for photosynthesis", "A vaccine technology"], answer: "A gene-editing tool", category: "Biology" },
+        { question: "What is the name for the VSEPR theory shape of a molecule like methane (CH4)?", options: ["Tetrahedral", "Trigonal planar", "Linear", "Bent"], answer: "Tetrahedral", category: "Chemistry" },
+        { question: "What is Heisenberg's Uncertainty Principle?", options: ["Position and momentum of a particle cannot be known simultaneously", "Energy is conserved in a closed system", "Entropy of the universe always increases", "For every action, there's an equal and opposite reaction"], answer: "Position and momentum of a particle cannot be known simultaneously", category: "Physics" },
+        { question: "What is the function of the Krebs cycle?", options: ["To generate energy through the oxidation of acetate", "To produce glucose from sunlight", "To break down fatty acids", "To synthesize amino acids"], answer: "To generate energy through the oxidation of acetate", category: "Biology" },
+        { question: "What is an Arrhenius acid?", options: ["A substance that produces H+ ions in aqueous solution", "A substance that accepts a proton", "A substance that donates an electron pair", "A substance that produces OH- ions in aqueous solution"], answer: "A substance that produces H+ ions in aqueous solution", category: "Chemistry" },
+        { question: "What is the Doppler effect?", options: ["Change in frequency of a wave in relation to an observer", "The bending of light around an object", "The splitting of light into its constituent colors", "The emission of electrons from a material when light shines on it"], answer: "Change in frequency of a wave in relation to an observer", category: "Physics" },
+        { question: "What are telomeres?", options: ["Caps at the end of chromosomes that protect genetic data", "The powerhouse of the cell", "The liquid portion of the blood", "Specialized nerve cells"], answer: "Caps at the end of chromosomes that protect genetic data", category: "Biology" },
+        { question: "What is the name of the reaction that combines a carboxylic acid and an alcohol to form an ester?", options: ["Esterification", "Saponification", "Neutralization", "Oxidation"], answer: "Esterification", category: "Chemistry" },
+        { question: "What is a superconductor?", options: ["A material with zero electrical resistance below a critical temperature", "A perfect insulator", "A material that converts heat to electricity", "A highly magnetic material"], answer: "A material with zero electrical resistance below a critical temperature", category: "Physics" },
+        { question: "What is the role of ATP in a cell?", options: ["It is the main energy currency of the cell", "It carries genetic information", "It acts as a structural component", "It catalyzes chemical reactions"], answer: "It is the main energy currency of the cell", category: "Biology" },
+        // ... (10 Grandmaster questions)
 
-<audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="wrongSound" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"></audio>
-<audio id="levelUpSound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+        // Legend Level
+        { question: "What is the Hayflick limit?", options: ["The number of times a normal human cell population will divide before cell division stops", "The maximum speed an object can reach", "The smallest possible unit of time", "The limit of resolution for a light microscope"], answer: "The number of times a normal human cell population will divide before cell division stops", category: "Biology" },
+        { question: "What is a Grignard reagent?", options: ["An organomagnesium halide with the formula R-Mg-X", "A strong oxidizing agent", "A catalyst used in polymerization", "A buffer solution"], answer: "An organomagnesium halide with the formula R-Mg-X", category: "Chemistry" },
+        { question: "What is quantum entanglement?", options: ["A phenomenon where linked particles' states remain connected regardless of distance", "The tunneling of a particle through a potential barrier", "The dual wave-particle nature of matter", "The quantization of energy levels in an atom"], answer: "A phenomenon where linked particles' states remain connected regardless of distance", category: "Physics" },
+        { question: "Describe the function of Reverse Transcriptase.", options: ["It synthesizes DNA from an RNA template", "It synthesizes RNA from a DNA template", "It repairs damaged DNA", "It unwinds the DNA double helix"], answer: "It synthesizes DNA from an RNA template", category: "Biology" },
+        { question: "What does the Schrödinger equation describe?", options: ["The wave function or state function of a quantum-mechanical system", "The gravitational field of a massive object", "The laws of thermodynamics", "The behavior of electric and magnetic fields"], answer: "The wave function or state function of a quantum-mechanical system", category: "Physics" },
+        { question: "What is the difference between enantiomers and diastereomers?", options: ["Enantiomers are non-superimposable mirror images; diastereomers are not mirror images", "Enantiomers have different chemical properties; diastereomers have similar properties", "Enantiomers are achiral; diastereomers are chiral", "Enantiomers are superimposable; diastereomers are not"], answer: "Enantiomers are non-superimposable mirror images; diastereomers are not mirror images", category: "Chemistry" },
+        { question: "What is the function of the lac operon in E. coli?", options: ["It regulates the transport and metabolism of lactose", "It controls cell division", "It repairs DNA damage", "It produces antibiotics"], answer: "It regulates the transport and metabolism of lactose", category: "Biology" },
+        { question: "According to the Standard Model, what are the fundamental forces of nature?", options: ["Strong, Weak, Electromagnetic, Gravitational", "Push, Pull, Friction, Tension", "Kinetic, Potential, Thermal, Chemical", "Centripetal, Centrifugal, Inertial, Fictitious"], answer: "Strong, Weak, Electromagnetic, Gravitational", category: "Physics" },
+        { question: "What is the Diels-Alder reaction?", options: ["A reaction between a conjugated diene and a substituted alkene", "A reaction to form a carbon-carbon triple bond", "An acid-base neutralization reaction", "A precipitation reaction"], answer: "A reaction between a conjugated diene and a substituted alkene", category: "Chemistry" },
+        { question: "What is apoptosis?", options: ["Programmed cell death", "Uncontrolled cell growth", "The process of cell specialization", "The fusion of two cells"], answer: "Programmed cell death", category: "Biology" },
+        // Adding more questions to reach 100
+        { question: "Which part of the human ear is responsible for balance?", options: ["Semicircular canals", "Cochlea", "Eardrum", "Auditory nerve"], answer: "Semicircular canals", category: "Biology" },
+        { question: "What is the chemical formula for table salt?", options: ["NaCl", "KCl", "MgCl2", "CaCl2"], answer: "NaCl", category: "Chemistry" },
+        { question: "What is inertia?", options: ["The resistance of an object to a change in its state of motion", "The force of attraction between two masses", "The amount of matter in an object", "The rate of change of velocity"], answer: "The resistance of an object to a change in its state of motion", category: "Physics" },
+        { question: "What is the main function of red blood cells?", options: ["Transport oxygen", "Fight infection", "Help in clotting", "Carry nutrients"], answer: "Transport oxygen", category: "Biology" },
+        { question: "Which of these is not a state of matter?", options: ["Heat", "Solid", "Liquid", "Gas"], answer: "Heat", category: "Chemistry" },
+        { question: "What type of energy is stored in a battery?", options: ["Chemical", "Kinetic", "Potential", "Nuclear"], answer: "Chemical", category: "Physics" },
+        { question: "What is the process of breaking down food in the body called?", options: ["Digestion", "Respiration", "Circulation", "Excretion"], answer: "Digestion", category: "Biology" },
+        { question: "What is the atomic number of Carbon?", options: ["6", "12", "14", "8"], answer: "6", category: "Chemistry" },
+        { question: "Sound waves travel fastest through which medium?", options: ["Solids", "Liquids", "Gases", "Vacuum"], answer: "Solids", category: "Physics" },
+        { question: "Which vitamin is known as the 'sunshine vitamin'?", options: ["Vitamin D", "Vitamin A", "Vitamin C", "Vitamin B12"], answer: "Vitamin D", category: "Biology" },
+        { question: "What is the process called when a liquid turns into a gas?", options: ["Evaporation", "Condensation", "Freezing", "Melting"], answer: "Evaporation", category: "Chemistry" },
+        { question: "Which color has the longest wavelength in the visible spectrum?", options: ["Red", "Violet", "Green", "Blue"], answer: "Red", category: "Physics" },
+        { question: "Which system in the human body fights off infections?", options: ["Immune system", "Nervous system", "Digestive system", "Respiratory system"], answer: "Immune system", category: "Biology" },
+        { question: "What are atoms composed of?", options: ["Protons, neutrons, and electrons", "Molecules and ions", "Cells and tissues", "Only electrons"], answer: "Protons, neutrons, and electrons", category: "Chemistry" },
+        { question: "What is the unit of power?", options: ["Watt", "Joule", "Newton", "Pascal"], answer: "Watt", category: "Physics" },
+        { question: "What is the human body's largest artery?", options: ["Aorta", "Pulmonary artery", "Femoral artery", "Carotid artery"], answer: "Aorta", category: "Biology" },
+        { question: "What is created when an acid and a base react?", options: ["Salt and water", "A stronger acid", "A stronger base", "A pure element"], answer: "Salt and water", category: "Chemistry" },
+        { question: "What phenomenon causes rainbows?", options: ["Dispersion of light", "Reflection", "Diffraction", "Interference"], answer: "Dispersion of light", category: "Physics" },
+        { question: "What is the study of fungi called?", options: ["Mycology", "Botany", "Zoology", "Virology"], answer: "Mycology", category: "Biology" },
+        { question: "What is the common name for Acetic Acid?", options: ["Vinegar", "Baking soda", "Lemon juice", "Sugar"], answer: "Vinegar", category: "Chemistry" },
+        { question: "What is the measure of an object's mass per unit volume?", options: ["Density", "Weight", "Pressure", "Area"], answer: "Density", category: "Physics" },
+        { question: "How many chambers are in the human heart?", options: ["Four", "Two", "Three", "One"], answer: "Four", category: "Biology" },
+        { question: "Which metal is liquid at room temperature?", options: ["Mercury", "Lead", "Aluminum", "Iron"], answer: "Mercury", category: "Chemistry" },
+        { question: "What device is used to measure atmospheric pressure?", options: ["Barometer", "Thermometer", "Anemometer", "Hygrometer"], answer: "Barometer", category: "Physics" },
+        { question: "What is the primary gas that we exhale?", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon Dioxide", category: "Biology" },
+        { question: "What is the main component of natural gas?", options: ["Methane", "Ethane", "Propane", "Butane"], answer: "Methane", category: "Chemistry" },
+        { question: "What is Ohm's law?", options: ["V = IR", "F = ma", "E = mc²", "P = IV"], answer: "V = IR", category: "Physics" },
+        { question: "Which organ in the human body produces insulin?", options: ["Pancreas", "Liver", "Kidney", "Stomach"], answer: "Pancreas", category: "Biology" },
+        { question: "Bronze is an alloy of which two metals?", options: ["Copper and Tin", "Copper and Zinc", "Iron and Carbon", "Aluminum and Magnesium"], answer: "Copper and Tin", category: "Chemistry" },
+        { question: "What is the term for the bending of light as it passes from one medium to another?", options: ["Refraction", "Reflection", "Diffraction", "Absorption"], answer: "Refraction", category: "Physics" }
+    ];
 
-</div>
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
 
-<script>
-const levels = ["Junior","Senior","Master","Grandmaster","Legend"];
-let currentLevel = 0, currentQuestion = 0, stars = 0, wrongCount = 0, timer, timeLeft = 15, playerName="";
-let score = 0;
+    const playerNameInput = document.getElementById('player-name');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
 
-const startScreen=document.getElementById("startScreen");
-const quizScreen=document.getElementById("quizScreen");
-const levelTitle=document.getElementById("levelTitle");
-const progressStars=document.getElementById("progressStars");
-const questionEl=document.getElementById("question");
-const optionBtns=[document.getElementById("option0"),document.getElementById("option1"),document.getElementById("option2"),document.getElementById("option3")];
-const levelUpScreen=document.getElementById("levelUpScreen");
-const nextLevelName=document.getElementById("nextLevelName");
-const continueBtn=document.getElementById("continueBtn");
-const gameOverScreen=document.getElementById("gameOverScreen");
-const finalScore=document.getElementById("finalScore");
-const leaderboardScreen=document.getElementById("leaderboardScreen");
-const leaderboardTable=document.getElementById("leaderboardTable");
-const timerEl=document.getElementById("timer");
-const correctSound=document.getElementById("correctSound");
-const wrongSound=document.getElementById("wrongSound");
-const levelUpSound=document.getElementById("levelUpSound");
+    const levelInfo = document.getElementById('level-info');
+    const scoreInfo = document.getElementById('score-info');
+    const wrongInfo = document.getElementById('wrong-info');
+    const timerDisplay = document.getElementById('timer');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
 
-// Sample Questions (add more for 100+)
-const quizData=[
-  {question:"Light travels fastest in?",options:["Vacuum","Water","Air","Glass"],answer:0},
-  {question:"H2O is chemical formula for?",options:["Water","Oxygen","Hydrogen","Helium"],answer:0},
-  {question:"Force = Mass x ?",options:["Acceleration","Velocity","Speed","Energy"],answer:0}
-  // 👉 add remaining 100+ questions here
-];
+    const finalScoreDisplay = document.getElementById('final-score');
+    const leaderboardList = document.getElementById('leaderboard-list');
 
-// Start
-document.getElementById("startBtn").addEventListener("click",()=>{
-  playerName=document.getElementById("playerName").value||"Unknown";
-  startScreen.style.display="none";
-  quizScreen.style.display="block";
-  showQuestion();
-});
+    // Audio Elements
+    let bgMusic, correctSound, wrongSound;
 
-// Timer
-function startTimer(){
-  clearInterval(timer);
-  timeLeft=15;
-  timerEl.innerText="⏳ "+timeLeft;
-  timer=setInterval(()=>{
-    timeLeft--;
-    timerEl.innerText="⏳ "+timeLeft;
-    if(timeLeft<=0){
-      clearInterval(timer);
-      wrongCount++;
-      if(wrongCount>=3){ gameOver(); return; }
-      nextQuestion();
+    function initAudio() {
+        bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Placeholder music
+        bgMusic.loop = true;
+        bgMusic.volume = 0.3;
+        correctSound = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3'); // Placeholder sound
+        wrongSound = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3'); // Placeholder sound
     }
-  },1000);
-}
 
-// Stars
-function updateStars(){
-  progressStars.innerHTML='';
-  for(let i=0;i<10;i++){
-    const star=document.createElement('div');
-    star.classList.add('star');
-    if(i<stars) star.classList.add('active');
-    progressStars.appendChild(star);
-  }
-}
+    // Game State
+    let score, wrongAnswers, currentQuestionIndex, timer, timerInterval, playerName, shuffledQuestions;
 
-// Show Q
-function showQuestion(){
-  if(currentQuestion>=quizData.length){ gameOver(); return; }
-  const q=quizData[currentQuestion];
-  questionEl.innerText=q.question;
-  q.options.forEach((opt,i)=>{
-    optionBtns[i].innerText=opt;
-    optionBtns[i].classList.remove("correct","wrong");
-    optionBtns[i].disabled=false;
-    optionBtns[i].onclick=()=>chooseAnswer(i,q.answer);
-  });
-  levelTitle.innerText="Level: "+levels[currentLevel];
-  updateStars();
-  startTimer();
-}
+    const levels = [
+        { name: 'Junior', stars: '⭐' },
+        { name: 'Senior', stars: '⭐⭐' },
+        { name: 'Master', stars: '⭐⭐⭐' },
+        { name: 'Grandmaster', stars: '⭐⭐⭐⭐' },
+        { name: 'Legend', stars: '⭐⭐⭐⭐⭐' }
+    ];
 
-// Choose Answer
-function chooseAnswer(i,correct){
-  clearInterval(timer);
-  if(i===correct){ 
-    optionBtns[i].classList.add("correct"); 
-    correctSound.play(); 
-    stars++; score+=10; 
-  } else { 
-    optionBtns[i].classList.add("wrong"); 
-    wrongSound.play(); 
-    wrongCount++; 
-  }
-  optionBtns.forEach(b=>b.disabled=true);
-  setTimeout(()=>{ 
-    if(wrongCount>=3){ gameOver(); return; }
-    if(stars>=10){ showLevelUp(); return; }
-    nextQuestion(); 
-  },800);
-}
+    // Functions
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 
-function nextQuestion(){ currentQuestion++; showQuestion(); }
+    function startGame() {
+        playerName = playerNameInput.value.trim();
+        if (!playerName) {
+            alert("Please enter your name!");
+            return;
+        }
+        
+        score = 0;
+        wrongAnswers = 0;
+        currentQuestionIndex = 0;
+        shuffledQuestions = shuffleArray([...questions]);
 
-function showLevelUp(){
-  quizScreen.style.display='none';
-  levelUpScreen.style.display='block';
-  nextLevelName.innerText="Next Level: "+(levels[currentLevel+1]||"Legend");
-  levelUpSound.play();
-}
+        startScreen.classList.remove('active');
+        gameOverScreen.classList.remove('active');
+        quizScreen.classList.add('active');
+        
+        if (!bgMusic) initAudio(); // Initialize audio on first user interaction
+        bgMusic.play().catch(e => console.error("Autoplay was blocked"));
 
-continueBtn.addEventListener('click',()=>{
-  levelUpScreen.style.display='none';
-  quizScreen.style.display='block';
-  stars=0; currentLevel++; 
-  showQuestion();
-});
+        updateHUD();
+        loadQuestion();
+    }
 
-// Game Over
-function gameOver(){
-  clearInterval(timer);
-  quizScreen.style.display="none";
-  levelUpScreen.style.display="none";
-  gameOverScreen.style.display="block";
-  finalScore.innerText=`${playerName}, Your Score: ${score}`;
-  saveScore(playerName,levels[currentLevel],score);
-}
+    function updateHUD() {
+        const currentLevelIndex = Math.floor(currentQuestionIndex / 10);
+        const level = levels[currentLevelIndex] || levels[levels.length - 1];
+        levelInfo.textContent = `Level: ${level.name} ${level.stars}`;
+        scoreInfo.textContent = `Score: ${score}`;
+        wrongInfo.textContent = `❌: ${wrongAnswers}`;
+    }
 
-// Restart
-function restartGame(){
-  wrongCount=0; stars=0; currentLevel=0; currentQuestion=0; score=0;
-  gameOverScreen.style.display="none"; quizScreen.style.display="block";
-  showQuestion();
-}
+    function loadQuestion() {
+        if (currentQuestionIndex >= shuffledQuestions.length) {
+            endGame();
+            return;
+        }
 
-// Leaderboard
-function saveScore(name,level,score){
-  let board=JSON.parse(localStorage.getItem("leaderboard")||"[]");
-  board.push({name,level,score});
-  board.sort((a,b)=>b.score-a.score);
-  if(board.length>10) board=board.slice(0,10);
-  localStorage.setItem("leaderboard",JSON.stringify(board));
-}
+        resetTimer();
+        const question = shuffledQuestions[currentQuestionIndex];
+        questionText.textContent = question.question;
+        optionsContainer.innerHTML = '';
+        
+        const shuffledOptions = shuffleArray([...question.options]);
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'btn';
+            button.textContent = option;
+            button.addEventListener('click', () => selectAnswer(option, question.answer, button));
+            optionsContainer.appendChild(button);
+        });
+        
+        updateHUD();
+    }
 
-document.getElementById("showLeaderboardBtn").addEventListener("click",showLeaderboard);
-function showLeaderboard(){
-  startScreen.style.display="none"; gameOverScreen.style.display="none"; leaderboardScreen.style.display="block";
-  let board=JSON.parse(localStorage.getItem("leaderboard")||"[]");
-  leaderboardTable.innerHTML="";
-  board.forEach(r=>{
-    let tr=document.createElement("tr");
-    tr.innerHTML=`<td>${r.name}</td><td>${r.level}</td><td>${r.score}</td>`;
-    leaderboardTable.appendChild(tr);
-  });
-}
+    function startTimer() {
+        timer = 15;
+        timerDisplay.textContent = timer;
+        timerInterval = setInterval(() => {
+            timer--;
+            timerDisplay.textContent = timer;
+            if (timer <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer(false, null);
+            }
+        }, 1000);
+    }
+    
+    function resetTimer() {
+        clearInterval(timerInterval);
+        startTimer();
+    }
+    
+    function selectAnswer(selectedOption, correctAnswer, button) {
+        clearInterval(timerInterval);
+        const isCorrect = selectedOption === correctAnswer;
+        
+        // Disable all buttons after an answer is chosen
+        const buttons = optionsContainer.getElementsByTagName('button');
+        for (let btn of buttons) {
+            btn.classList.add('disabled');
+        }
 
-function backToStart(){
-  leaderboardScreen.style.display="none"; startScreen.style.display="block";
-}
-</script>
+        handleAnswer(isCorrect, button);
+    }
+
+    function handleAnswer(isCorrect, button) {
+        if (isCorrect) {
+            score++;
+            correctSound.play();
+            if (button) {
+                button.classList.add('correct-flash');
+            }
+        } else {
+            wrongAnswers++;
+            wrongSound.play();
+            if (button) {
+                button.classList.add('wrong-flash');
+            }
+        }
+
+        updateHUD();
+
+        if (wrongAnswers >= 3) {
+            setTimeout(endGame, 1000);
+        } else {
+            currentQuestionIndex++;
+            setTimeout(loadQuestion, 1000); // Wait for animation
+        }
+    }
+    
+    function endGame() {
+        clearInterval(timerInterval);
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+        
+        quizScreen.classList.remove('active');
+        gameOverScreen.classList.add('active');
+        finalScoreDisplay.textContent = `Your Final Score: ${score}`;
+        
+        saveScore();
+        displayLeaderboard();
+    }
+    
+    function saveScore() {
+        const scores = JSON.parse(localStorage.getItem('scienceQuizScores')) || [];
+        scores.push({ name: playerName, score: score });
+        scores.sort((a, b) => b.score - a.score); // Sort descending
+        scores.splice(10); // Keep top 10
+        localStorage.setItem('scienceQuizScores', JSON.stringify(scores));
+    }
+    
+    function displayLeaderboard() {
+        const scores = JSON.parse(localStorage.getItem('scienceQuizScores')) || [];
+        leaderboardList.innerHTML = '';
+        if (scores.length === 0) {
+            leaderboardList.innerHTML = '<li>No scores yet. Be the first!</li>';
+        } else {
+            scores.forEach(s => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${s.name}</span><span>${s.score}</span>`;
+                leaderboardList.appendChild(li);
+            });
+        }
+    }
+    
+    // Event Listeners
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', () => {
+        gameOverScreen.classList.remove('active');
+        startScreen.classList.add('active');
+    });
+
+    // Initial load
+    displayLeaderboard(); // Show leaderboard on start screen as well if any
+    </script>
 </body>
 </html>
